@@ -42,8 +42,8 @@ func main() {
         binary.Write(conn, binary.BigEndian, security)
 
         //Reads Security response
-        var buf3 []byte
-        resp, err = conn.Read(buf3[0:])
+        var buf3 [1]byte
+        resp, err := conn.Read(buf3[0:])
         fmt.Println("response was ", resp)
 		conn.Close()
 	}
