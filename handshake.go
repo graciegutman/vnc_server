@@ -6,6 +6,7 @@ import (
 	"net"
     "encoding/binary"
 	"os"
+   // "io/ioutil"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
         conn.Write([]byte(version))
 
         //Reads Version response
-        var buf [12]byte
+        buf := make([]byte, 12)
         _, err = conn.Read(buf[0:])
         version_resp := string(buf[0:])
         fmt.Println("response was ", version_resp)
@@ -42,7 +43,7 @@ func main() {
         binary.Write(conn, binary.BigEndian, security)
 
         //Reads Security response
-        var buf3 [1]byte
+        buf3 := make([]byte, 1)
         resp, err := conn.Read(buf3[0:])
         fmt.Println("response was ", resp)
 		conn.Close()
