@@ -6,10 +6,35 @@ import (
 	"net"
     "encoding/binary"
 	"os"
+    "bytes"
    // "io/ioutil"
 )
+const SERVER_NAME string = ("Gracie")
+
+type PixelFormat struct {
+    bits_per_pixel uint8
+    depth uint8
+    big_endian_flag uint8
+    true_colour_flag uint8
+    red_max uint16
+    green_max uint16
+    blue_max uint16
+    red_shift uint8
+    green_shift uint8
+    blue_shift uint8
+    padding [3]byte 
+}
+
+type ServerInit struct {
+    fb_width uint16
+    fb_height uint16
+    server_pixel_format PixelFormat
+    name_length uint32
+    name_string [len(SERVER_NAME)]byte
+}
 
 func main() {
+
 	//the port we'll be listening on
 	service := ":5900"
 	//we get a pointer to a TCPAddr struct
@@ -43,10 +68,17 @@ func main() {
         binary.Write(conn, binary.BigEndian, security)
 
         //Reads Security response
+        //Beginning of initialization phase (client flag)
         buf3 := make([]byte, 1)
         resp, err := conn.Read(buf3[0:])
         fmt.Println("response was ", resp)
 		conn.Close()
+
+        //Server sends a bunch of stuff about formats it will use
+        pixelData := new(ServerInit)
+        test_buff := new(bytes.Buffer)
+        binary.Write(test_buff, binary.BigEndian, pixelData)
+        fmt.Printf("%b", test_buff.Bytes())
 	}
 }
 
