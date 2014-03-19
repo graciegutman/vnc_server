@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
-    //"bytes"
+	//"bytes"
 	// "io/ioutil"
 )
 
@@ -84,7 +84,6 @@ func main() {
 		resp, err := conn.Read(buf3[0:])
 		fmt.Println("response was ", resp)
 
-
 		//Server sends a bunch of stuff about formats it will use
 		pf := PixelFormat{
 			bits_per_pixel:   32,
@@ -102,56 +101,56 @@ func main() {
 			fb_width:            1280,
 			fb_height:           1024,
 			server_pixel_format: pf,
-            name_length: 3,
-            name_string: [3]byte{1, 2, 3},
+			name_length:         3,
+			name_string:         [3]byte{1, 2, 3},
 		}
 		//Write ServerInit message to conn
 		binary.Write(conn, binary.BigEndian, pixelData)
-        fmt.Printf("Conn: %b\n", conn)
-        /*Okay: not that it hadn't been hairy and gross before, but here is
-        my abomination. This is the beginning of the phase in which I couldn't
-        just hardcode a "read this many bytes" function, because this is the
-        part where I'd have to take multiple different types of requests. 
-        My first priority was "get green rectangle on the screen," so I basically
-        called read for some arbitrary amount of bytes, just to block long enough
-        that I knew I had a request for a framebuffer. Then I just wrote a
-        framebuffer in a loop. Voila, framebuffer. And then tears. Well,
-        this was a nice experiment. Time to start over with what I know now.*/
+		fmt.Printf("Conn: %b\n", conn)
+		/*Okay: not that it hadn't been hairy and gross before, but here is
+		  my abomination. This is the beginning of the phase in which I couldn't
+		  just hardcode a "read this many bytes" function, because this is the
+		  part where I'd have to take multiple different types of requests.
+		  My first priority was "get green rectangle on the screen," so I basically
+		  called read for some arbitrary amount of bytes, just to block long enough
+		  that I knew I had a request for a framebuffer. Then I just wrote a
+		  framebuffer in a loop. Voila, framebuffer. And then tears. Well,
+		  this was a nice experiment. Time to start over with what I know now.*/
 
-        for i := 0; i < 500; i++ {
-            buf4 := make([]byte, 70)
-            resp, err = conn.Read(buf4[0:])
-            fmt.Println("response was ", resp)
+		for i := 0; i < 500; i++ {
+			buf4 := make([]byte, 70)
+			resp, err = conn.Read(buf4[0:])
+			fmt.Println("response was ", resp)
 
-            //Create pix array of all green values
-            pix_array := createPixArray(int(pixelData.fb_height), int(pixelData.fb_width))
-            
-            fb_update := &FrameBufferUpdate{
-                number_of_rectangles: 1,
-                x: 0,
-                y: 0, 
-                width: pixelData.fb_width,
-                height: pixelData.fb_height,
-                encoding_type: 0}
-             
-            err := binary.Write(conn, binary.BigEndian, fb_update)
-            fmt.Printf("Fb update error: %v\n", err)
-            err = binary.Write(conn, binary.LittleEndian, pix_array)
-            fmt.Printf("pix array error: %v\n", err)
-            
-        }
+			//Create pix array of all green values
+			pix_array := createPixArray(int(pixelData.fb_height), int(pixelData.fb_width))
+
+			fb_update := &FrameBufferUpdate{
+				number_of_rectangles: 1,
+				x:                    0,
+				y:                    0,
+				width:                pixelData.fb_width,
+				height:               pixelData.fb_height,
+				encoding_type:        0}
+
+			err := binary.Write(conn, binary.BigEndian, fb_update)
+			fmt.Printf("Fb update error: %v\n", err)
+			err = binary.Write(conn, binary.LittleEndian, pix_array)
+			fmt.Printf("pix array error: %v\n", err)
+
+		}
 
 		conn.Close()
 	}
 }
 
-func createPixArray(width, height int)[]uint32 {
-    size := width * height
-    pix_slice := make([]uint32, size)
-    for i := 0; i < (size); i++{
-        pix_slice[i] = 65280
-    }
-    return pix_slice
+func createPixArray(width, height int) []uint32 {
+	size := width * height
+	pix_slice := make([]uint32, size)
+	for i := 0; i < (size); i++ {
+		pix_slice[i] = 65280
+	}
+	return pix_slice
 }
 
 func checkError(err error) {
