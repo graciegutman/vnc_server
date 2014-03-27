@@ -6,18 +6,25 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"fmt"
+	"io/ioutil"
 )
 
-func TakeScreenShot() (err error) {
+func TakeScreenShot() (f *os.File, err error) {
+	f, err = ioutil.TempFile("", "screenshot")
+	if err != nil {
+		log.Fatal("could not create temp file")
+	}
     _, err = exec.LookPath("screencapture")
     if err != nil {
         log.Fatal("screencapture not installed")
     }
-    _, err = exec.Command("screencapture", "-x", "c", "frame.png").CombinedOutput()
+    _, err = exec.Command("screencapture", "-x", f.Name()).CombinedOutput()
     if err != nil {
         log.Fatal("screencapture failed")
     }
-    return
+    fmt.Println("took screenshot")
+    return f, err
 }
 
 func ImgDecode(decodedPNG image.Image) (pixSlice []uint8, err error) {
@@ -44,8 +51,8 @@ func GetImageWidthHeight(decodedPNG image.Image) (uint16, uint16) {
 	return rect_width, rect_height
 }
 
-func DecodeFileToPNG() (decodedPNG image.Image, err error) {
-	reader, err := os.Open("frame.png")
+func DecodeFileToPNG(f *os.File) (decodedPNG image.Image, err error) {
+	reader, err := os.Open(f.Name())
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -54,7 +61,21 @@ func DecodeFileToPNG() (decodedPNG image.Image, err error) {
 		return decodedPNG, err
 }
 
-func decodePixel(x, y int, img image.Image) (r, g, b, padding uint8) {
+func ResizeImage(f *os.File) (err error) {
+	_, err = exec.LookPath("convert")
+    if err != nil {
+        log.Fatal("imagemagick not installed")
+    }
+    var out []byte
+    out, err = exec.Command("convert", f.Name(), "-resize", "40%%", f.Name()).CombinedOutput()
+    if err != nil {
+        log.Fatalf("resize failed. output: %s", out)
+    }
+    fmt.Println("resized")
+    return
+}
+
+func decodePixel(x, y int, img image.Image) (r, b, g, padding uint8) {
 	pix := img.At(x, y)
 	r32, g32, b32, _ := pix.RGBA()
 	r8, g8, b8, padding := uint8(r32), uint8(g32), uint8(b32), uint8(0)
@@ -62,12 +83,12 @@ func decodePixel(x, y int, img image.Image) (r, g, b, padding uint8) {
 }
 
 func appendPixelValues(r, g, b, padding uint8, pixSlice []uint8) []uint8 {
-	pixSlice = append(pixSlice, padding, r, g, b)
+	pixSlice = append(pixSlice, b, g, r, padding)
 	return pixSlice
 }
 
 func findXY(count int, rect image.Rectangle) (x, y int) {
-	x, y = count%rect.Dx()+rect.Min.X, count / rect.Dx()+rect.Min.Y
+	x, y = count%rect.Dx() + rect.Min.X, count / rect.Dx() + rect.Min.Y
 	return x, y
 }
 

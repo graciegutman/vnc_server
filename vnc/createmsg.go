@@ -5,6 +5,7 @@ import(
     "fmt"
     "os"
     "encoding/binary"
+    "log"
 )
 
 const(
@@ -16,8 +17,8 @@ const(
 
 const(
     VersionNumber string = "RFB 003.003\n"
-    FBWidth uint16 = 1280
-    FBHeight uint16 = 800
+    FBWidth uint16 = 1024
+    FBHeight uint16 = 640
     ServerNameLen uint32 = 3
     SecurityType uint32 = 1
 )
@@ -125,9 +126,9 @@ func NewPixelFormat() PixelFormat {
                     redMax: 255,
                     greenMax: 255,
                     blueMax: 255,
-                    redShift: 16,
+                    redShift: 0,
                     greenShift: 8,
-                    blueShift: 0,
+                    blueShift: 16,
     }
 }
 
@@ -149,19 +150,24 @@ func NewFrameBuffer(width, height uint16) FrameBufferUpdate {
 }
 
 func NewFrameBufferWithImage() (newFrameBuffer FrameBufferUpdate, pixSlice []uint8) {
-    _ = TakeScreenShot()
-    fmt.Println("took screenshot")
-    image, _ := DecodeFileToPNG()
+    f, err := TakeScreenShot()
+    if err != nil{
+        log.Fatal("screenshot failed")
+    }
+    err = ResizeImage(f)
+    image, _ := DecodeFileToPNG(f)
     width, height := GetImageWidthHeight(image)
+    fmt.Println(width, height)
     newFrameBuffer = NewFrameBuffer(width, height)
-    pixSlice, err := ImgDecode(image)
+    pixSlice, err = ImgDecode(image)
     checkError(err)
+    os.Remove(f.Name())
     return newFrameBuffer, pixSlice
 }
 
 func SendFrameBuffer(conn net.Conn, frameBuffer FrameBufferUpdate, pixSlice []uint8) (err error) {
     binary.Write(conn, binary.BigEndian, frameBuffer)
-    binary.Write(conn, binary.BigEndian, pixSlice)
+    binary.Write(conn, binary.LittleEndian, pixSlice)
     return
 }
 

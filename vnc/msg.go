@@ -57,8 +57,9 @@ func parseSetEncodings(reader io.Reader) (msgLength int){
 func readMsgKind(reader io.Reader) MsgKind {
     buf := make([]byte, 1)
     _, err := reader.Read(buf)
+    fmt.Println(buf)
     if err != nil {
-        log.Fatal("could not read first byte in buffer")
+        log.Fatal(err)
     }
     msgKind := MsgKind(buf[0])
     return msgKind
