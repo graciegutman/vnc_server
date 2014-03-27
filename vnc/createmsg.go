@@ -137,7 +137,7 @@ func SendServerInit(serverInitMsg ServerInit, conn net.Conn) (err error) {
     return err
 }
 
-func NewFrameBuffer(width, height uint16) FrameBufferUpdate {
+func NewFrameBufferRaw(width, height uint16) FrameBufferUpdate {
     return FrameBufferUpdate {
                             messageType: 0,
                             numberOfRectangles: 1,
@@ -149,7 +149,14 @@ func NewFrameBuffer(width, height uint16) FrameBufferUpdate {
     }
 }
 
-func NewFrameBufferWithImage() (newFrameBuffer FrameBufferUpdate, pixSlice []uint8) {
+func MakeAndSendFrameBufferRaw(conn net.Conn) (err error) {
+    fb, ps := NewFrameBufferWithImageRaw()
+    err = SendFrameBufferRaw(conn, fb, ps)
+    checkError(err)
+    return 
+}
+
+func NewFrameBufferWithImageRaw() (newFrameBuffer FrameBufferUpdate, pixSlice []uint8) {
     f, err := TakeScreenShot()
     if err != nil{
         log.Fatal("screenshot failed")
@@ -158,14 +165,14 @@ func NewFrameBufferWithImage() (newFrameBuffer FrameBufferUpdate, pixSlice []uin
     image, _ := DecodeFileToPNG(f)
     width, height := GetImageWidthHeight(image)
     fmt.Println(width, height)
-    newFrameBuffer = NewFrameBuffer(width, height)
-    pixSlice, err = ImgDecode(image)
+    newFrameBuffer = NewFrameBufferRaw(width, height)
+    pixSlice, err = ImgDecodeRaw(image)
     checkError(err)
     os.Remove(f.Name())
     return newFrameBuffer, pixSlice
 }
 
-func SendFrameBuffer(conn net.Conn, frameBuffer FrameBufferUpdate, pixSlice []uint8) (err error) {
+func SendFrameBufferRaw(conn net.Conn, frameBuffer FrameBufferUpdate, pixSlice []uint8) (err error) {
     binary.Write(conn, binary.BigEndian, frameBuffer)
     binary.Write(conn, binary.LittleEndian, pixSlice)
     return

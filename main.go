@@ -44,11 +44,10 @@ func main() {
         //main loop starts
         for {
             //read from client
+            //ADD A MESSAGE HANDLER
             _, msgnum := vnc.GetMsg(conn)
             if msgnum == 3 {
-                fb, ps := vnc.NewFrameBufferWithImage()
-                err := vnc.SendFrameBuffer(conn, fb, ps)
-                checkError(err)
+            go vnc.MakeAndSendFrameBufferRaw(conn)
             }
         }
     } //conn.Close()

@@ -19,7 +19,7 @@ func TakeScreenShot() (f *os.File, err error) {
     if err != nil {
         log.Fatal("screencapture not installed")
     }
-    _, err = exec.Command("screencapture", "-x", f.Name()).CombinedOutput()
+    _, err = exec.Command("screencapture", "-x", "-C", f.Name()).CombinedOutput()
     if err != nil {
         log.Fatal("screencapture failed")
     }
@@ -27,7 +27,7 @@ func TakeScreenShot() (f *os.File, err error) {
     return f, err
 }
 
-func ImgDecode(decodedPNG image.Image) (pixSlice []uint8, err error) {
+func ImgDecodeRaw(decodedPNG image.Image) (pixSlice []uint8, err error) {
 	pixSlice = []uint8{}
 	rect := decodedPNG.Bounds()
 	rect_area := rect.Dx() * rect.Dy()
