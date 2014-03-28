@@ -58,6 +58,11 @@ type FrameBufferUpdate struct {
     encodingType         int32
 }
 
+type FrameBufferWithImage struct {
+    frameBufferMsg FrameBufferUpdate
+    pixelFormat []uint8
+}
+
 func CreateListener() (listener *net.TCPListener, err error) {
     //the port we'll be listening on
     service := ":5900"
@@ -149,32 +154,36 @@ func NewFrameBufferRaw(width, height uint16) FrameBufferUpdate {
     }
 }
 
-func MakeAndSendFrameBufferRaw(conn net.Conn) (err error) {
-    fb, ps := NewFrameBufferWithImageRaw()
-    err = SendFrameBufferRaw(conn, fb, ps)
-    checkError(err)
-    return 
-}
+//func MakeAndSendFrameBufferRaw(conn net.Conn) (err error) {
+    //fb, ps := NewFrameBufferWithImageRaw()
+    //err = SendFrameBufferRaw(conn, fb, ps)
+    //checkError(err)
+    //return 
+//}
 
-func NewFrameBufferWithImageRaw() (newFrameBuffer FrameBufferUpdate, pixSlice []uint8) {
-    f, err := TakeScreenShot()
-    if err != nil{
-        log.Fatal("screenshot failed")
+func NewFrameBufferWithImageRaw(c chan *FrameBufferWithImage) {
+    for {
+        f, err := TakeScreenShot()
+        if err != nil{
+            log.Fatal("screenshot failed")
+        }
+        err = ResizeImage(f)
+        image, _ := DecodeFileToPNG(f)
+        width, height := GetImageWidthHeight(image)
+        fmt.Println(width, height)
+        newFrameBuffer := NewFrameBufferRaw(width, height)
+        pixSlice, err := ImgDecodeRaw(image)
+        checkError(err)
+        os.Remove(f.Name())
+        fb := &FrameBufferWithImage{newFrameBuffer, pixSlice}
+        c <- fb
     }
-    err = ResizeImage(f)
-    image, _ := DecodeFileToPNG(f)
-    width, height := GetImageWidthHeight(image)
-    fmt.Println(width, height)
-    newFrameBuffer = NewFrameBufferRaw(width, height)
-    pixSlice, err = ImgDecodeRaw(image)
-    checkError(err)
-    os.Remove(f.Name())
-    return newFrameBuffer, pixSlice
 }
 
-func SendFrameBufferRaw(conn net.Conn, frameBuffer FrameBufferUpdate, pixSlice []uint8) (err error) {
-    binary.Write(conn, binary.BigEndian, frameBuffer)
-    binary.Write(conn, binary.LittleEndian, pixSlice)
+func SendFrameBufferRaw(conn net.Conn, c chan *FrameBufferWithImage) {
+    fb := <-c
+    binary.Write(conn, binary.BigEndian, fb.frameBufferMsg)
+    binary.Write(conn, binary.LittleEndian, fb.pixelFormat)
     return
 }
 

@@ -41,13 +41,18 @@ func main() {
         err = vnc.SendServerInit(serverInitMsg, conn)
         checkError(err)
 
+        c := make(chan *vnc.FrameBufferWithImage, 100)
+
+        go vnc.NewFrameBufferWithImageRaw(c)
+        go vnc.NewFrameBufferWithImageRaw(c)
+        go vnc.NewFrameBufferWithImageRaw(c)
         //main loop starts
         for {
             //read from client
             //ADD A MESSAGE HANDLER
             _, msgnum := vnc.GetMsg(conn)
             if msgnum == 3 {
-            go vnc.MakeAndSendFrameBufferRaw(conn)
+            vnc.SendFrameBufferRaw(conn, c)
             }
         }
     } //conn.Close()
