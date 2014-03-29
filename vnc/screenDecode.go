@@ -7,14 +7,10 @@ import (
 	"os"
 	"os/exec"
 	"fmt"
-	"io/ioutil"
+	//"io/ioutil"
 )
 
-func TakeScreenShot() (f *os.File, err error) {
-	f, err = ioutil.TempFile("", "screenshot")
-	if err != nil {
-		log.Fatal("could not create temp file")
-	}
+func TakeScreenShot(f *os.File) (err error) {
     _, err = exec.LookPath("screencapture")
     if err != nil {
         log.Fatal("screencapture not installed")
@@ -24,7 +20,7 @@ func TakeScreenShot() (f *os.File, err error) {
         log.Fatal("screencapture failed")
     }
     fmt.Println("took screenshot")
-    return f, err
+    return err
 }
 
 func ImgDecodeRaw(decodedPNG image.Image) (pixSlice []uint8, err error) {

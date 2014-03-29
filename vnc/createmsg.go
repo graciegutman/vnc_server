@@ -6,6 +6,7 @@ import(
     "os"
     "encoding/binary"
     "log"
+    "io/ioutil"
 )
 
 const(
@@ -163,18 +164,27 @@ func NewFrameBufferRaw(width, height uint16) FrameBufferUpdate {
 
 func NewFrameBufferWithImageRaw(c chan *FrameBufferWithImage) {
     for {
-        f, err := TakeScreenShot()
+        f, err := ioutil.TempFile("", "screenshot")
+        if err != nil {
+            log.Fatal("could not create temp file")
+        }
+        
+        err = TakeScreenShot(f)
         if err != nil{
             log.Fatal("screenshot failed")
         }
+        
         err = ResizeImage(f)
+        checkError(err)
+
         image, _ := DecodeFileToPNG(f)
         width, height := GetImageWidthHeight(image)
-        fmt.Println(width, height)
         newFrameBuffer := NewFrameBufferRaw(width, height)
         pixSlice, err := ImgDecodeRaw(image)
         checkError(err)
+        
         os.Remove(f.Name())
+
         fb := &FrameBufferWithImage{newFrameBuffer, pixSlice}
         c <- fb
     }
