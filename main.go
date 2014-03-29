@@ -41,11 +41,8 @@ func main() {
         err = vnc.SendServerInit(serverInitMsg, conn)
         checkError(err)
 
-        c := make(chan *vnc.FrameBufferWithImage, 100)
-
-        go vnc.NewFrameBufferWithImageRaw(c)
-        go vnc.NewFrameBufferWithImageRaw(c)
-        go vnc.NewFrameBufferWithImageRaw(c)
+        c := make(chan *vnc.FrameBufferWithImage, 50)
+        spawnThreads(10, c)
         //main loop starts
         for {
             //read from client
@@ -62,5 +59,11 @@ func checkError(err error) {
     if err != nil {
         fmt.Fprintf(os.Stderr, "Fatal error: %s \n", err.Error())
         os.Exit(1)
+    }
+}
+
+func spawnThreads(count int, c chan *vnc.FrameBufferWithImage) {
+    for i := 0; i < count; i++ {
+        go vnc.NewFrameBufferWithImageRaw(c)
     }
 }
