@@ -42,7 +42,7 @@ func main() {
         checkError(err)
 
         c := make(chan *vnc.FrameBufferWithImage, 50)
-        spawnThreads(10, c)
+        spawnThreads(3, c)
         //main loop starts
         for {
             //read from client

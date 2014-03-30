@@ -63,7 +63,7 @@ func ResizeImage(f *os.File) (err error) {
         log.Fatal("imagemagick not installed")
     }
     var out []byte
-    out, err = exec.Command("convert", f.Name(), "-resize", "40%%", f.Name()).CombinedOutput()
+    out, err = exec.Command("convert", f.Name(), "-resize", "40%%", "-quality", "30", f.Name()).CombinedOutput()
     if err != nil {
         log.Fatalf("resize failed. output: %s", out)
     }
@@ -79,7 +79,7 @@ func decodePixel(x, y int, img image.Image) (r, b, g, padding uint8) {
 }
 
 func appendPixelValues(r, g, b, padding uint8, pixSlice []uint8) []uint8 {
-	pixSlice = append(pixSlice, b, g, r, padding)
+	pixSlice = append(pixSlice, r, g, b, padding)
 	return pixSlice
 }
 
