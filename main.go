@@ -48,7 +48,7 @@ func main() {
 			//read from client
 			//ADD A MESSAGE HANDLER
 			msg, msgNum := vnc.GetMsg(conn)
-			err = vnc.MsgDispatch(conn, msgNum, c, msg)
+			vnc.MsgDispatch(conn, msgNum, c, msg)
 			checkError(err)
 		}
 	} //conn.Close()

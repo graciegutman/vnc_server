@@ -1,4 +1,4 @@
-package main
+package vnc
 
 /*
 #cgo CFLAGS: -x objective-c
@@ -7,7 +7,7 @@ package main
 #import <Cocoa/Cocoa.h>
 
 void
-MoveMouseSomewhere(int x, int y) {
+MoveMouseSomewhere(double x, double y) {
     CGPoint p = {x, y};
     CGError e = CGWarpMouseCursorPosition(p);
 }
@@ -27,7 +27,7 @@ getMouse(double *x, double *y) {
 }
 
 void
-MouseDown(int x, int y) {
+MouseDown(double x, double y) {
     CGPoint p = {x, y};
     CGEventRef theEvent = CGEventCreateMouseEvent(NULL, NX_LMOUSEDOWN, p, kCGMouseButtonLeft);
     CGEventSetType(theEvent, NX_LMOUSEDOWN);
@@ -36,7 +36,7 @@ MouseDown(int x, int y) {
 }
 
 void
-MouseUp(int x, int y) {
+MouseUp(double x, double y) {
     CGPoint p = {x, y};
     CGEventRef theEvent2 = CGEventCreateMouseEvent(NULL, NX_LMOUSEUP, p, kCGMouseButtonLeft);
     CGEventSetType(theEvent2, NX_LMOUSEUP);
@@ -55,20 +55,23 @@ func getMouse() (x, y float64) {
 	return
 }
 
-func MoveMouse() (x, y C.int) {
-	C.MoveMouseSomewhere(x, y)
+func MoveMouse(x, y float64) {
+    cx, cy := C.double(x), C.double(y)
+	C.MoveMouseSomewhere(cx, cy)
 	return
 }
 
-func mouseDown(x, y C.int) {
-	C.MouseDown(x, y)
+func mouseDown(x, y float64) {
+    cx, cy := C.double(x), C.double(y)
+	C.MouseDown(cx, cy)
 }
 
-func mouseUp(x, y C.int) {
-	C.MouseUp(x, y)
+func mouseUp(x, y float64) {
+    cx, cy := C.double(x), C.double(y)
+	C.MouseUp(cx, cy)
 }
 
-func Click(x, y C.int) {
+func Click(x, y float64) {
 	mouseDown(x, y)
 	time.Sleep(200 * time.Millisecond)
 	mouseUp(x, y)

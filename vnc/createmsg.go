@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"C"
 )
 
 const (
@@ -143,7 +144,7 @@ func SendServerInit(serverInitMsg ServerInit, conn net.Conn) (err error) {
 	return err
 }
 
-func MsgDispatch(conn net.Conn, msgNum int, c chan *FrameBufferWithImage, msg []byte) {
+func MsgDispatch(conn net.Conn, msgNum MsgKind, c chan *FrameBufferWithImage, msg []byte) {
 	if msgNum == 3 {
 		go SendFrameBufferRaw(conn, c)
 	} else if msgNum == 5 {
@@ -151,12 +152,12 @@ func MsgDispatch(conn net.Conn, msgNum int, c chan *FrameBufferWithImage, msg []
 	}
 }
 
-func processClick(msg) {
+func processClick(msg []byte) {
 	clickData := ParseClickEvent(msg)
 	if clickData.clickMask == 1 {
-		Click(int(clickData.x), int(clickData.y))
+		Click(clickData.x, clickData.y)
 	} else {
-		MoveMouse(int(clickData.x), int(clickData.y))
+		MoveMouse(clickData.x, clickData.y)
 	}
 }
 
@@ -178,6 +179,7 @@ func NewFrameBufferWithImageRaw(c chan *FrameBufferWithImage) {
 		image, _ := DecodeFileToPNG(f)
 		width, height := GetImageWidthHeight(image)
 		newFrameBuffer := NewFrameBufferRaw(width, height)
+		fmt.Println(width, height)
 		pixSlice, err := ImgDecodeRaw(image)
 		checkError(err)
 

@@ -28,8 +28,8 @@ const (
 
 type MouseData struct {
 	clickMask uint8
-	x         uint16
-	y         uint16
+	x         float64
+	y         float64
 }
 
 func GetMsg(reader io.Reader) (msg []byte, msgKind MsgKind) {
@@ -80,6 +80,7 @@ func readMsg(msgLength int, reader io.Reader) []byte {
 }
 
 func ParseClickEvent(clickMsg []byte) MouseData {
+	var resRatio float64 = 1.25
 	var clickMask uint8
 	var x uint16
 	var y uint16
@@ -92,10 +93,13 @@ func ParseClickEvent(clickMsg []byte) MouseData {
 	binary.Read(b2, binary.BigEndian, &x)
 	binary.Read(b3, binary.BigEndian, &y)
 
+	// accounts for stupid retina display scaling shenaniganry
+	var fx, fy float64 = (float64(x) * resRatio), (float64(y) * resRatio)
+
 	return MouseData{
 		clickMask: clickMask,
-		x:         x,
-		y:         y,
+		x:         fx,
+		y:         fy,
 	}
 }
 

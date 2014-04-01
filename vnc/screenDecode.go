@@ -63,7 +63,7 @@ func ResizeImage(f *os.File) (err error) {
 		log.Fatal("imagemagick not installed")
 	}
 	var out []byte
-	out, err = exec.Command("convert", f.Name(), "-resize", "40%%", "-quality", "30", f.Name()).CombinedOutput()
+	out, err = exec.Command("convert", f.Name(), "-resize", "40%%", f.Name()).CombinedOutput()
 	if err != nil {
 		log.Fatalf("resize failed. output: %s", out)
 	}
