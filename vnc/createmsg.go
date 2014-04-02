@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	FramebufferUpdate   uint8 = 0
+	FBUpdate   uint8 = 0
 	SetColourMapEntries uint8 = 1
 	Bell                uint8 = 2
 	ServerCutText       uint8 = 3
@@ -49,7 +49,7 @@ type PixelFormat struct {
 	padding        [3]byte
 }
 
-type FrameBufferUpdate struct {
+type FBUpdateMsg struct {
 	messageType        uint8
 	padding            [1]byte
 	numberOfRectangles uint16
@@ -60,8 +60,8 @@ type FrameBufferUpdate struct {
 	encodingType       int32
 }
 
-type FrameBufferWithImage struct {
-	frameBufferMsg FrameBufferUpdate
+type FBUpdateWithImage struct {
+	frameBufferMsg FBUpdateMsg
 	pixelFormat    []uint8
 }
 
@@ -144,9 +144,9 @@ func SendServerInit(serverInitMsg ServerInit, conn net.Conn) (err error) {
 	return err
 }
 
-func MsgDispatch(conn net.Conn, msgNum MsgKind, c chan *FrameBufferWithImage, msg []byte) {
+func MsgDispatch(conn net.Conn, msgNum MsgKind, c chan *FBUpdateWithImage, msg []byte) {
 	if msgNum == 3 {
-		go SendFrameBufferRaw(conn, c)
+		go SendFrameBuffer(conn, c)
 	} else if msgNum == 5 {
 		go processClick(msg)
 	}
@@ -161,44 +161,42 @@ func processClick(msg []byte) {
 	}
 }
 
-func NewFrameBufferWithImageRaw(c chan *FrameBufferWithImage) {
-	for {
-		f, err := ioutil.TempFile("", "screenshot")
-		if err != nil {
-			log.Fatal("could not create temp file")
-		}
-
-		err = TakeScreenShot(f)
-		if err != nil {
-			log.Fatal("screenshot failed")
-		}
-
-		err = ResizeImage(f)
-		checkError(err)
-
-		image, _ := DecodeFileToPNG(f)
-		width, height := GetImageWidthHeight(image)
-		newFrameBuffer := NewFrameBufferRaw(width, height)
-		fmt.Println(width, height)
-		pixSlice, err := ImgDecodeRaw(image)
-		checkError(err)
-
-		os.Remove(f.Name())
-
-		fb := &FrameBufferWithImage{newFrameBuffer, pixSlice}
-		c <- fb
+func NewFBUpdateWithImage() *FBUpdateWithImage {
+	f, err := ioutil.TempFile("", "screenshot")
+	if err != nil {
+		log.Fatal("could not create temp file")
 	}
+
+	err = TakeScreenShot(f)
+	if err != nil {
+		log.Fatal("screenshot failed")
+	}
+
+	err = ResizeImage(f)
+	checkError(err)
+
+	image, _ := DecodeFileToPNG(f)
+	width, height := GetImageWidthHeight(image)
+	newFrameBuffer := NewFrameBuffer(width, height)
+	fmt.Println(width, height)
+	pixSlice, err := ImgDecode(image)
+	checkError(err)
+
+	os.Remove(f.Name())
+
+	fb := &FBUpdateWithImage{newFrameBuffer, pixSlice}
+	return fb
 }
 
-func SendFrameBufferRaw(conn net.Conn, c chan *FrameBufferWithImage) {
+func SendFrameBuffer(conn net.Conn, c chan *FBUpdateWithImage) {
 	fb := <-c
 	binary.Write(conn, binary.BigEndian, fb.frameBufferMsg)
 	binary.Write(conn, binary.LittleEndian, fb.pixelFormat)
 	return
 }
 
-func NewFrameBufferRaw(width, height uint16) FrameBufferUpdate {
-	return FrameBufferUpdate{
+func NewFrameBuffer(width, height uint16) FBUpdateMsg {
+	return FBUpdateMsg{
 		messageType:        0,
 		numberOfRectangles: 1,
 		x:                  0,

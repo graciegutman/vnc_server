@@ -23,7 +23,7 @@ func TakeScreenShot(f *os.File) (err error) {
 	return err
 }
 
-func ImgDecodeRaw(decodedPNG image.Image) (pixSlice []uint8, err error) {
+func ImgDecode(decodedPNG image.Image) (pixSlice []uint8, err error) {
 	pixSlice = []uint8{}
 	rect := decodedPNG.Bounds()
 	rect_area := rect.Dx() * rect.Dy()
