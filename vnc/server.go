@@ -41,9 +41,9 @@ func Super() {
 
 func handleClient(c chan *FBUpdateWithImage, conn net.Conn) {
     //handshake (version exchange)
-    versionFlag, err := ExchangeVersions(conn)
+    _, err := ExchangeVersions(conn)
     checkError(err)
-    fmt.Println(versionFlag)
+    //fmt.Println(versionFlag)
 
     // send security level
     err = SendSecurity(conn)
@@ -65,10 +65,14 @@ func handleClient(c chan *FBUpdateWithImage, conn net.Conn) {
     // main loop starts
     for {
         //read from client
-        msg, msgNum := GetMsg(conn)
+        msg, msgNum, err := GetMsg(conn)
+        if err != nil {
+            conn.Close()
+        }
         //do something with the message
         MsgDispatch(conn, msgNum, c, msg)
     }
+    fmt.Printf("CLIENT exiting w/ conn %v\n", conn)
 }
 
 

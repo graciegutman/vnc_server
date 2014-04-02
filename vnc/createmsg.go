@@ -178,7 +178,7 @@ func NewFBUpdateWithImage() *FBUpdateWithImage {
 	image, _ := DecodeFileToPNG(f)
 	width, height := GetImageWidthHeight(image)
 	newFrameBuffer := NewFrameBuffer(width, height)
-	fmt.Println(width, height)
+	//fmt.Println(width, height)
 	pixSlice, err := ImgDecode(image)
 	checkError(err)
 

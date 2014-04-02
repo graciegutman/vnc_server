@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"log"
+	//"log"
 )
 
 type MsgKind int
@@ -17,6 +17,7 @@ const (
 	KeyEvent                 MsgKind = 4
 	PointerEvent             MsgKind = 5
 	ClientCutText            MsgKind = 6
+	Unknown					 MsgKind = 404
 )
 
 const (
@@ -32,51 +33,52 @@ type MouseData struct {
 	y         float64
 }
 
-func GetMsg(reader io.Reader) (msg []byte, msgKind MsgKind) {
-	msgKind = readMsgKind(reader)
-	fmt.Println("Message type:", msgKind)
-	msgLength := getMsgLength(msgKind, reader)
-	msg = readMsg(msgLength, reader)
-	return
+func GetMsg(reader io.Reader) (msg []byte, msgKind MsgKind, err error) {
+	msgKind, err = readMsgKind(reader)
+	if err != nil {
+		return nil, Unknown, err
+	}
+	msgLength, err := getMsgLength(msgKind, reader)
+	if err != nil {
+		return nil, Unknown, err
+	}
+	msg, err = readMsg(msgLength, reader)
+	return msg, msgKind, err
 }
 
-func readMsgKind(reader io.Reader) MsgKind {
+func readMsgKind(reader io.Reader) (MsgKind, error) {
 	buf := make([]byte, 1)
 	_, err := reader.Read(buf)
-	fmt.Println(buf)
 	if err != nil {
-		log.Fatal(err)
+		return Unknown, err
 	}
+	//casting int into MsgKind
 	msgKind := MsgKind(buf[0])
-	return msgKind
+	return msgKind, err
 }
 
-func getMsgLength(msgKind MsgKind, reader io.Reader) int {
+func getMsgLength(msgKind MsgKind, reader io.Reader) (int, error){
 	switch msgKind {
 	case SetPixelFormat:
-		return SetPixelFormatLen
+		return SetPixelFormatLen, nil
 	case SetEncodings:
 		return getSetEncodingsLen(reader)
 	case FramebufferUpdateRequest:
-		return FBUpdateRequestLen
+		return FBUpdateRequestLen, nil
 	case KeyEvent:
-		return KeyEventLen
+		return KeyEventLen, nil
 	case PointerEvent:
-		return PointerEventLen
+		return PointerEventLen, nil
 	default:
 		fmt.Println("can't determine length")
 	}
-	return 0
+	return 0, nil
 }
 
-func readMsg(msgLength int, reader io.Reader) []byte {
+func readMsg(msgLength int, reader io.Reader) ([]byte, error) {
 	buf := make([]byte, msgLength)
 	_, err := reader.Read(buf)
-	if err != nil {
-		log.Fatal("could not read rest of message in buffer")
-	}
-	fmt.Println(buf)
-	return buf
+	return buf, err
 }
 
 func ParseClickEvent(clickMsg []byte) MouseData {
@@ -103,22 +105,22 @@ func ParseClickEvent(clickMsg []byte) MouseData {
 	}
 }
 
-func getSetEncodingsLen(reader io.Reader) (msgLength int) {
-	fmt.Println("in Parse Set Encodings")
+func getSetEncodingsLen(reader io.Reader) (msgLength int, err error) {
+	//fmt.Println("in Parse Set Encodings")
 	// read 3 bytes from the message
 	var num32BitInts uint16
 	buf := make([]byte, 3)
-	_, err := reader.Read(buf)
+	_, err = reader.Read(buf)
 	if err != nil {
-		log.Fatal("couldn't read Set Encodings Msg")
+		return 0, err
 	}
-	fmt.Println(buf)
+	//fmt.Println(buf)
 	// bytes 2 and 3 make up a uint16 value that tells
 	// us how many 32-bit integers follow
 	b := bytes.NewReader(buf[1:])
-	err = binary.Read(b, binary.BigEndian, &num32BitInts)
+	binary.Read(b, binary.BigEndian, &num32BitInts)
 	// 4 bytes per 32 bit integer.
 
 	msgLength = int(num32BitInts) * 4
-	return msgLength
+	return msgLength, err
 }

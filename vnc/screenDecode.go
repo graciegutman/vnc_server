@@ -1,7 +1,7 @@
 package vnc
 
 import (
-	"fmt"
+	//"fmt"
 	"image"
 	"image/png"
 	"log"
@@ -19,7 +19,7 @@ func TakeScreenShot(f *os.File) (err error) {
 	if err != nil {
 		log.Fatal("screencapture failed")
 	}
-	fmt.Println("took screenshot")
+	//fmt.Println("took screenshot")
 	return err
 }
 
@@ -67,7 +67,7 @@ func ResizeImage(f *os.File) (err error) {
 	if err != nil {
 		log.Fatalf("resize failed. output: %s", out)
 	}
-	fmt.Println("resized")
+	//fmt.Println("resized")
 	return
 }
 
