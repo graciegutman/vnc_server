@@ -140,7 +140,7 @@ func NewPixelFormat() PixelFormat {
 }
 
 func SendServerInit(serverInitMsg ServerInit, conn net.Conn) (err error) {
-	binary.Write(conn, binary.BigEndian, serverInitMsg)
+	err = binary.Write(conn, binary.BigEndian, serverInitMsg)
 	return err
 }
 
@@ -190,8 +190,10 @@ func NewFBUpdateWithImage() *FBUpdateWithImage {
 
 func SendFrameBuffer(conn net.Conn, c chan *FBUpdateWithImage) {
 	fb := <-c
-	binary.Write(conn, binary.BigEndian, fb.frameBufferMsg)
-	binary.Write(conn, binary.LittleEndian, fb.pixelFormat)
+	err := binary.Write(conn, binary.BigEndian, fb.frameBufferMsg)
+	checkError(err)
+	err = binary.Write(conn, binary.LittleEndian, fb.pixelFormat)
+	checkError(err)
 	return
 }
 
