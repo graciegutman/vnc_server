@@ -30,7 +30,7 @@ func ImgDecode(decodedPNG image.Image) (pixSlice []uint8, err error) {
 
 	count := 0
 	for ; count < rect_area; count++ {
-		x, y := findXY(count, rect)
+		x, y := FindXY(count, rect)
 		r, g, b, padding := decodePixel(x, y, decodedPNG)
 		pixSlice = appendPixelValues(r, g, b, padding, pixSlice)
 	}
@@ -49,6 +49,16 @@ func GetImageWidthHeight(decodedPNG image.Image) (uint16, uint16) {
 
 func DecodeFileToPNG(f *os.File) (decodedPNG image.Image, err error) {
 	reader, err := os.Open(f.Name())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer reader.Close()
+	decodedPNG, err = png.Decode(reader)
+	return decodedPNG, err
+}
+
+func DecodeFileToPNGtst(f string) (decodedPNG image.Image, err error) {
+	reader, err := os.Open(f)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -83,7 +93,7 @@ func appendPixelValues(r, g, b, padding uint8, pixSlice []uint8) []uint8 {
 	return pixSlice
 }
 
-func findXY(count int, rect image.Rectangle) (x, y int) {
+func FindXY(count int, rect image.Rectangle) (x, y int) {
 	x, y = count%rect.Dx()+rect.Min.X, count/rect.Dx()+rect.Min.Y
 	return x, y
 }

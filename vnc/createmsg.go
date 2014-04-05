@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 	"C"
 )
 
@@ -61,6 +62,7 @@ type FBUpdateMsg struct {
 }
 
 type FBUpdateWithImage struct {
+	Timestamp time.Time
 	frameBufferMsg FBUpdateMsg
 	pixelFormat    []uint8
 }
@@ -87,7 +89,7 @@ func receiveVersion(conn net.Conn) (version string, err error) {
 	return version, err
 }
 
-func ExchangeVersions(conn net.Conn) (versionFlag bool, err error) {
+func exchangeVersions(conn net.Conn) (versionFlag bool, err error) {
 	err = sendVersion(conn)
 	checkError(err)
 
@@ -102,12 +104,12 @@ func ExchangeVersions(conn net.Conn) (versionFlag bool, err error) {
 	return versionFlag, err
 }
 
-func SendSecurity(conn net.Conn) (err error) {
+func sendSecurity(conn net.Conn) (err error) {
 	err = binary.Write(conn, binary.BigEndian, SecurityType)
 	return err
 }
 
-func ReceiveClientInit(conn net.Conn) (clientInitFlag int, err error) {
+func receiveClientInit(conn net.Conn) (clientInitFlag int, err error) {
 	buf := make([]byte, 1)
 	resp, err := conn.Read(buf)
 	clientInitFlag = int(resp)
@@ -144,9 +146,9 @@ func SendServerInit(serverInitMsg ServerInit, conn net.Conn) (err error) {
 	return err
 }
 
-func MsgDispatch(conn net.Conn, msgNum MsgKind, c chan *FBUpdateWithImage, msg []byte) {
+func MsgDispatch(conn net.Conn, msgNum MsgKind, c chan *FBUpdateWithImage, msg []byte, errChan chan error) {
 	if msgNum == 3 {
-		go SendFrameBuffer(conn, c)
+		go SendFrameBuffer(conn, c, errChan)
 	} else if msgNum == 5 {
 		go processClick(msg)
 	}
@@ -184,16 +186,23 @@ func NewFBUpdateWithImage() *FBUpdateWithImage {
 
 	os.Remove(f.Name())
 
-	fb := &FBUpdateWithImage{newFrameBuffer, pixSlice}
+	fb := &FBUpdateWithImage{time.Now(), newFrameBuffer, pixSlice}
 	return fb
 }
 
-func SendFrameBuffer(conn net.Conn, c chan *FBUpdateWithImage) {
+func SendFrameBuffer(conn net.Conn, c chan *FBUpdateWithImage, errChan chan error) {
 	fb := <-c
+	log.Printf("Sending image (stale for %v)", time.Now().Sub(fb.Timestamp))
 	err := binary.Write(conn, binary.BigEndian, fb.frameBufferMsg)
-	checkError(err)
+	if err != nil {
+		errChan <- err
+	}
+
 	err = binary.Write(conn, binary.LittleEndian, fb.pixelFormat)
-	checkError(err)
+	if err != nil {
+		errChan <- err
+	}
+	fmt.Println("returning now")
 	return
 }
 
@@ -215,3 +224,6 @@ func checkError(err error) {
 		os.Exit(1)
 	}
 }
+
+
+
