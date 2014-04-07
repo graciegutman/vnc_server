@@ -40,20 +40,23 @@ I chose to use Golang for a number of reasons, not the least of which was my des
 
 My actual server design is composed of four main segments, each of which occupies its own thread or multiple threads. 
 
-###Super:
+####Super:
 A supervisor thread that oversees the client server/connection and initializes and launches the client and image server threads. It can access the image server threads by way of several channels stored in a struct called WorkerGroup. Having separate super and client threads allows for multiple clients to connect to the server at once.
 
-###Image Server:
-The image server is responsible for taking screenshots and putting them on channels that can be read by client threads. The image server can be initialized as an arbitrary number of threads to increase the frequency by which screenshots are taken.
+####Image Server:
+The image server is responsible for taking screenshots and putting them on channels that can be read by client threads and sent on the network. The image server can be a single thread taking, processing, and writing screenshots, or it can be initialized as multiple threads doing these things concurrently. 
 
-###Client:
+Currently, writing the very large image data to the network is a speed bottleneck, so splitting the server into threads that can take and process more than 2 or 3 images per second is a waste of overhead. Once I implement better image encoding, I'll experiment with splitting the server into more threads.
+
+####Client:
 The client thread handles the handshake, initialization, and main communication loop with the VNC client. In the main loop, the client thread reads incoming client messages and determines the proper response message. Then, each response is constructed and sent in its own thread. Because of this, the write functionality doesn’t run the risk of blocking the read functionality until everything is written to the network. When the client returns, it sends a “dying” message to a clean up thread which removes the client’s unique channel from the image server.
 
-###Clean up Crew:
+####Clean up Crew:
 Is responsible for notifying image server to remove the dying client’s channel.
 
-## Implementation Details
-### Server and Control Flow
+##Implementation Details
+####Server and Control Flow:
+When the VNC server is launched, Super instantiates a TCP listener on port 5900. It then calls newWorkerGroup() to both launch the image server, and construct a workerGroup--a struct that has access to all of the image server's channels (the data types used to communicate between threads). 
 
 
 In progress
