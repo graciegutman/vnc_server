@@ -65,7 +65,7 @@ Each image server thread is initialized with three channels:
 
 2. workerImageChanChans is a channel that accepts image channels. Each client gets a unique image channel upon connection. The reason for this is that reading from any given channel is destructive. If there were more than one client reading from one image channel, each client would only see ~ (number of screenshots written to channel) / (number of clients connected). Instead, when a client connects, Super creates a unique image channel. The image channel is given to the client thread as a parameter, and is broadcast to all image server threads through their image channel channels. The image server threads then add the image channel to its list of active client image channels. 
 
-3. workerErrChans workerErrChan is a channel that accepts imageChannels. It allows for the destruction of active client image channels when clients disconnect. Channels block when a sender writes to it and a receiver isn't reading from it. Conversely, channels block when a receiver tries to read from a channel and a sender isn't writing to it. Not deleting image channels would mean the image server would continue to try to write images to the channel, but there would be no client reading from the channel, creating a block. 
+3. workerErrChan is a channel that accepts imageChannels. It allows for the destruction of active client image channels when clients disconnect. Channels block when a sender writes to it and a receiver isn't reading from it. Conversely, channels block when a receiver tries to read from a channel and a sender isn't writing to it. Not deleting image channels would mean the image server would continue to try to write images to the channel, but there would be no client reading from the channel, creating a block. 
 
 Once the image channel is initialized, Super waits in a loop for a connection. Once it has one, several events occur.
 
@@ -76,7 +76,23 @@ Once the image channel is initialized, Super waits in a loop for a connection. O
 
 4. cleanUpCrew--the thread in charge of cleanup--is launched as a go routine with access to workerGroup and the alert channel
 
-5. handleClient--the thread in charge of client processes--is launched with access to its image channel, and its alert channel. 
+5. handleClient--the thread in charge of client processes--is launched with access to its image channel, its connection object, and its alert channel. 
+
+After this, Super can go back to listening for other clients.
+
+#####During Client Connection
+The handshake and initialization phase of the client connection simply consist of writing RFB messages back and forth, and if the server and client both receive expected messages during this phase, communication enters the main loop. 
+
+The main loop consists of the following activities:
+The server reads any client messages and selects an appropriate response (for now, responses can be cursor events or image sending). It discards messages it cannot do anything about. The proper response function is then launched as a separate thread, which returns when data is written to the connection. In this way, reading and writing never block one another. 
+
+When the client terminates its session, two deferred events fire before the client thread returns:
+
+1. A notification is sent to the cleanup thread that the client's image server must be deleted
+2. The client connection is closed
+
+#####After Client Connection
+When the cleanup thread receives notification of client termination, it broadcasts a message to all image server threads. When the image server thread receives the message, it finds that client's image channel in its list of channels and deletes it. 
 
 In progress
 
