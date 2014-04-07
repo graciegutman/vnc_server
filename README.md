@@ -5,12 +5,12 @@ A very slow, eminently multithreaded VNC server in Go
 
 ## Files Contained in This Repository
 
-main.go: build with CC=clang go build main.go
-vnc/createmsg.go: message serialization
-vnc/readMsg.go: message deserialization
-vnc/screenDecode.go: screenshot grabbing and processing
-vnc/mouse.go: cursor handling
-vnc/server.go: server control flow and utilities
++ main.go: build with CC=clang go build main.go
++ vnc/createmsg.go: message serialization
++ vnc/readMsg.go: message deserialization
++ vnc/screenDecode.go: screenshot grabbing and processing
++ vnc/mouse.go: cursor handling
++ vnc/server.go: server control flow and utilities
 
 ##### A Disclaimer About Requirements and Dependencies
 
@@ -23,7 +23,7 @@ knew I was less interested in the product side of development, and more
 interested in dispelling as much magic and learning as many foreign
 programming concepts as possible. I ended up choosing to write a VNC server in
 Go, which would expose me to networks, lower level OS concepts, concurrency,
-and a new language.
+and a new language (which turned out to be two new languages).
 
 At the highest level, a VNC server works like this: the VNC server and VNC client connect and shake hands. The client asks the server for its screen data, and the server responds by sending the client screen data. The client sends the server info about its cursor and keyboard events, and the server reads the info and treats those click and keyboard events as its own. The combined effect of these interactions is remote control of a computer.
 
