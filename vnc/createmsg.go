@@ -4,6 +4,7 @@ package vnc
 necessary for serialization. */
 
 import (
+	"C"
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
@@ -11,11 +12,10 @@ import (
 	"net"
 	"os"
 	"time"
-	"C"
 )
 
 const (
-	FBUpdate   uint8 = 0
+	FBUpdate            uint8 = 0
 	SetColourMapEntries uint8 = 1
 	Bell                uint8 = 2
 	ServerCutText       uint8 = 3
@@ -65,7 +65,7 @@ type FBUpdateMsg struct {
 }
 
 type FBUpdateWithImage struct {
-	Timestamp time.Time
+	Timestamp      time.Time
 	frameBufferMsg FBUpdateMsg
 	pixelFormat    []uint8
 }
@@ -234,6 +234,3 @@ func checkError(err error) {
 		os.Exit(1)
 	}
 }
-
-
-

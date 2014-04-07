@@ -20,7 +20,7 @@ const (
 	KeyEvent                 MsgKind = 4
 	PointerEvent             MsgKind = 5
 	ClientCutText            MsgKind = 6
-	Unknown					 MsgKind = 404
+	Unknown                  MsgKind = 404
 )
 
 const (
@@ -36,7 +36,7 @@ type MouseData struct {
 	y         float64
 }
 
-// Get msg reads the first byte of each message to determine the type, 
+// Get msg reads the first byte of each message to determine the type,
 // looks up the length of that type of message, and returns the rest
 // of the message with the type.
 func GetMsg(reader io.Reader) (msg []byte, msgKind MsgKind, err error) {
@@ -63,7 +63,7 @@ func readMsgKind(reader io.Reader) (MsgKind, error) {
 	return msgKind, err
 }
 
-func getMsgLength(msgKind MsgKind, reader io.Reader) (int, error){
+func getMsgLength(msgKind MsgKind, reader io.Reader) (int, error) {
 	switch msgKind {
 	case SetPixelFormat:
 		return SetPixelFormatLen, nil
@@ -95,7 +95,7 @@ func ParseClickEvent(clickMsg []byte) MouseData {
 	// coordinates of cursor on screen
 	var x uint16
 	var y uint16
-	
+
 	b1 := bytes.NewReader(clickMsg[:1])
 	b2 := bytes.NewReader(clickMsg[1:3])
 	b3 := bytes.NewReader(clickMsg[3:])

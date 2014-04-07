@@ -59,18 +59,18 @@ func getMouse() (x, y float64) {
 }
 
 func MoveMouse(x, y float64) {
-    cx, cy := C.double(x), C.double(y)
+	cx, cy := C.double(x), C.double(y)
 	C.MoveMouseSomewhere(cx, cy)
 	return
 }
 
 func mouseDown(x, y float64) {
-    cx, cy := C.double(x), C.double(y)
+	cx, cy := C.double(x), C.double(y)
 	C.MouseDown(cx, cy)
 }
 
 func mouseUp(x, y float64) {
-    cx, cy := C.double(x), C.double(y)
+	cx, cy := C.double(x), C.double(y)
 	C.MouseUp(cx, cy)
 }
 
