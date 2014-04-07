@@ -30,7 +30,7 @@ At the highest level, a VNC server works like this: the VNC server and VNC clien
 My VNC server makes heavy use of go routines--Go's lightweight threads--to support multiple clients, respond quickly to messages, and speed up screen grabbing. It currently supports some cursor events but not keyboard events (although implementation of those should be straightforward).
 
 ## The Choice To Use Go
-I chose to use Golang for a number of reasons, not the least of which was my desire to learn a language that didn't abstract as much away from me as JavaScript and Python had. I believed it was an appropriate choice for this language because of the following: 
+I chose to use Golang for a number of reasons, not the least of which was my desire to learn a language that didn't abstract as much away from me as JavaScript and Python had. I believed Go was an appropriate choice for this project because of the following: 
 
 + The RFB protocol calls for very specific data types in its messages, and it made sense to use a language that was outright about what types of data it was using (for example, uint32 vs. int16)
 + Go has an interesting and accessible way of dealing with multi-threading. Go routines are lightweight threads, which can pass data to each other through structures called channels (as opposed to accessing common global data, which makes race conditions more likely).
