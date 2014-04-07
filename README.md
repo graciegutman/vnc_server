@@ -3,7 +3,7 @@ vnc_server
 
 A very slow, eminently multithreaded VNC server in Go
 
-#H2 Files Contained in This Repository
+## Files Contained in This Repository
 
 main.go: build with CC=clang go build main.go
 vnc/createmsg.go: message serialization
@@ -12,11 +12,11 @@ vnc/screenDecode.go: screenshot grabbing and processing
 vnc/mouse.go: cursor handling
 vnc/server.go: server control flow and utilities
 
-#H4 A Disclaimer About Requirements and Dependencies
+##### A Disclaimer About Requirements and Dependencies
 
 This VNC server is a student project; I didn't build it with portability in mind. If you really intend to run this server, you need to have Imagemagick, Cocoa, and Go installed. The server has not been tested on any platform other than a Mac OSX 10.9. 
 
-#H2 Overview
+## Overview
 
 When it came time to decide what to hack on for four weeks at Hackbright, I
 knew I was less interested in the product side of development, and more
@@ -29,18 +29,18 @@ At the highest level, a VNC server works like this: the VNC server and VNC clien
 
 My VNC server makes heavy use of go routines--Go's lightweight threads--to support multiple clients, respond quickly to messages, and speed up screen grabbing. It currently supports some cursor events but not keyboard events (although implementation of those should be straightforward).
 
-#H2 The Choice To Use Golang
+## The Choice To Use Golang
 
 In progress
 
-#H2 High-Level Architecture 
+## High-Level Architecture 
 
 In progress
 
-#H2 Implementation Details
+## Implementation Details
 
 In progress
 
-#H2 Final Thoughts
+## Final Thoughts
 
 In progress
