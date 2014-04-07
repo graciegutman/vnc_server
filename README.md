@@ -38,9 +38,23 @@ I chose to use Golang for a number of reasons, not the least of which was my des
 
 ## High-Level Architecture 
 
-In progress
+My actual server design is composed of four main segments, each of which occupies its own thread or multiple threads. 
+
+Super:
+A supervisor thread that oversees the client server/connection and initializes and launches the client and image server threads. It can access the image server threads by way of several channels stored in a struct called WorkerGroup. Having separate super and client threads allows for multiple clients to connect to the server at once.
+
+Image Server:
+The image server is responsible for taking screenshots and putting them on channels that can be read by client threads. The image server can be initialized as an arbitrary number of threads to increase the frequency by which screenshots are taken.
+
+Client:
+The client thread handles the handshake, initialization, and main communication loop with the VNC client. In the main loop, the client thread reads incoming client messages and determines the proper response message. Then, each response is constructed and sent in its own thread. Because of this, the write functionality doesn’t run the risk of blocking the read functionality until everything is written to the network. When the client returns, it sends a “dying” message to a clean up thread which removes the client’s unique channel from the image server.
+
+Clean up Crew:
+Is responsible for notifying image server to remove the dying client’s channel.
 
 ## Implementation Details
+### Server and Control Flow
+
 
 In progress
 
