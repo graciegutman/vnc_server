@@ -1,5 +1,8 @@
 package vnc
 
+/* This is a file representing functions and data
+necessary for serialization. */
+
 import (
 	"encoding/binary"
 	"fmt"
@@ -146,6 +149,8 @@ func SendServerInit(serverInitMsg ServerInit, conn net.Conn) (err error) {
 	return err
 }
 
+// Each response is launched in its own goroutine in order to keep
+// the message reader from lagging
 func MsgDispatch(conn net.Conn, msgNum MsgKind, c chan *FBUpdateWithImage, msg []byte, errChan chan error) {
 	if msgNum == 3 {
 		go SendFrameBuffer(conn, c, errChan)
@@ -164,6 +169,9 @@ func processClick(msg []byte) {
 }
 
 func NewFBUpdateWithImage() *FBUpdateWithImage {
+
+	// Temp file should technically be created here
+	// instead of in TakeScreenShot()
 	f, err := ioutil.TempFile("", "screenshot")
 	if err != nil {
 		log.Fatal("could not create temp file")
@@ -196,11 +204,13 @@ func SendFrameBuffer(conn net.Conn, c chan *FBUpdateWithImage, errChan chan erro
 	err := binary.Write(conn, binary.BigEndian, fb.frameBufferMsg)
 	if err != nil {
 		errChan <- err
+		return
 	}
 
 	err = binary.Write(conn, binary.LittleEndian, fb.pixelFormat)
 	if err != nil {
 		errChan <- err
+		return
 	}
 	fmt.Println("returning now")
 	return

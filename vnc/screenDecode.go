@@ -1,14 +1,15 @@
 package vnc
 
 import (
-	//"fmt"
 	"image"
 	"image/png"
 	"log"
 	"os"
 	"os/exec"
-	//"io/ioutil"
 )
+
+// This code needs some restructuring and cleanup.
+// Currently requires Imagemagick and the built-in unix utility "screencapture"
 
 func TakeScreenShot(f *os.File) (err error) {
 	_, err = exec.LookPath("screencapture")
@@ -77,10 +78,11 @@ func ResizeImage(f *os.File) (err error) {
 	if err != nil {
 		log.Fatalf("resize failed. output: %s", out)
 	}
-	//fmt.Println("resized")
 	return
 }
 
+// Go's RGBA method returns all color channels as uint32, but the RFB protocol
+// 8 bits per channel. Alpha channel is replaced by padding.
 func decodePixel(x, y int, img image.Image) (r, b, g, padding uint8) {
 	pix := img.At(x, y)
 	r32, g32, b32, _ := pix.RGBA()
@@ -94,6 +96,7 @@ func appendPixelValues(r, g, b, padding uint8, pixSlice []uint8) []uint8 {
 }
 
 func FindXY(count int, rect image.Rectangle) (x, y int) {
+	//Simulate a 2D array from a 1D array
 	x, y = count%rect.Dx()+rect.Min.X, count/rect.Dx()+rect.Min.Y
 	return x, y
 }

@@ -1,11 +1,14 @@
 package vnc
 
+/* This is a file representing functions necessary for
+reading off the connection and serializing. Not all messages
+are fully supported yet. */
+
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"io"
-	//"log"
+	"log"
 )
 
 type MsgKind int
@@ -33,6 +36,9 @@ type MouseData struct {
 	y         float64
 }
 
+// Get msg reads the first byte of each message to determine the type, 
+// looks up the length of that type of message, and returns the rest
+// of the message with the type.
 func GetMsg(reader io.Reader) (msg []byte, msgKind MsgKind, err error) {
 	msgKind, err = readMsgKind(reader)
 	if err != nil {
@@ -70,7 +76,7 @@ func getMsgLength(msgKind MsgKind, reader io.Reader) (int, error){
 	case PointerEvent:
 		return PointerEventLen, nil
 	default:
-		fmt.Println("can't determine length")
+		log.Printf("can't determine length")
 	}
 	return 0, nil
 }
@@ -82,11 +88,14 @@ func readMsg(msgLength int, reader io.Reader) ([]byte, error) {
 }
 
 func ParseClickEvent(clickMsg []byte) MouseData {
+	// resRatio for stupid retina display scaling shenaniganry
 	var resRatio float64 = 1.25
+	// type of button/cursor event
 	var clickMask uint8
+	// coordinates of cursor on screen
 	var x uint16
 	var y uint16
-
+	
 	b1 := bytes.NewReader(clickMsg[:1])
 	b2 := bytes.NewReader(clickMsg[1:3])
 	b3 := bytes.NewReader(clickMsg[3:])
@@ -95,7 +104,6 @@ func ParseClickEvent(clickMsg []byte) MouseData {
 	binary.Read(b2, binary.BigEndian, &x)
 	binary.Read(b3, binary.BigEndian, &y)
 
-	// accounts for stupid retina display scaling shenaniganry
 	var fx, fy float64 = (float64(x) * resRatio), (float64(y) * resRatio)
 
 	return MouseData{
@@ -106,7 +114,6 @@ func ParseClickEvent(clickMsg []byte) MouseData {
 }
 
 func getSetEncodingsLen(reader io.Reader) (msgLength int, err error) {
-	//fmt.Println("in Parse Set Encodings")
 	// read 3 bytes from the message
 	var num32BitInts uint16
 	buf := make([]byte, 3)
@@ -114,13 +121,11 @@ func getSetEncodingsLen(reader io.Reader) (msgLength int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	//fmt.Println(buf)
 	// bytes 2 and 3 make up a uint16 value that tells
-	// us how many 32-bit integers follow
+	// us how many 32-bit integers will follow in the message
 	b := bytes.NewReader(buf[1:])
 	binary.Read(b, binary.BigEndian, &num32BitInts)
 	// 4 bytes per 32 bit integer.
-
 	msgLength = int(num32BitInts) * 4
 	return msgLength, err
 }

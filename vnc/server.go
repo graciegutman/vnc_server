@@ -46,7 +46,7 @@ func Super() {
 
     // initialize the image server thread(s) (workers)
     // and create a record of all worker channels
-    workerGroup := newWorkerGroup(1)
+    workerGroup := newWorkerGroup(2)
 
     for {
         conn, err := listener.Accept()

@@ -1,5 +1,8 @@
 package vnc
 
+// This package wraps some Cocoa cursor handlers (objective-C) in Go
+// Compile with CC=clang
+
 /*
 #cgo CFLAGS: -x objective-c
 #cgo LDFLAGS: -framework Cocoa
